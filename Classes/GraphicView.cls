@@ -13,6 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 Private WithEvents mCanvas As PictureBox
+Attribute mCanvas.VB_VarHelpID = -1
 Private m_Points  As List
 Private m_MarginL As Double 'Left
 Private m_MarginT As Double 'Top
@@ -32,7 +33,7 @@ Private m_PointHighlighted As Point3D
 Private m_PointSelected    As Point3D
 
 Public Event MousePointInWorldCoords(ByVal PX As Double, ByVal PY As Double)
-Public Event PointSelected(p As Point3D)
+Public Event PointSelected(p As Point3D, ByVal Index As Long)
 
 Private Sub Class_Initialize()
     m_MarginL = 1: m_MarginT = 1: m_MarginR = 1: m_MarginB = 1
@@ -131,7 +132,6 @@ Private Sub Point_DeleteHightlighting(p As Point3D)
     mCanvas.Circle (X, Y), 3, vbBlue
 End Sub
 
-
 Private Sub mCanvas_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
     Dim X0 As Double: X0 = Me.CenterX
     Dim Y0 As Double: Y0 = Me.CenterY
@@ -139,8 +139,8 @@ Private Sub mCanvas_MouseMove(Button As Integer, Shift As Integer, X As Single, 
     Dim YN As Single: YN = mCanvas.ScaleHeight / 2
     Dim PX As Double: PX = X0 + (X - XN) / m_Zoom
     Dim PY As Double: PY = Y0 - (Y - YN) / m_Zoom
-    Dim p As Point3D
-    If GetPointByCoords(PX, PY, p) Then
+    Dim p As Point3D, i As Long
+    If GetPointByCoords(PX, PY, p, i) Then
         If Not m_PointHighlighted Is Nothing Then
             If Not m_PointHighlighted.IsSame(p) Then
                 Point_DeleteHightlighting m_PointHighlighted
@@ -166,9 +166,9 @@ Private Sub mCanvas_MouseDown(Button As Integer, Shift As Integer, X As Single, 
     Dim YN As Single: YN = mCanvas.ScaleHeight / 2
     Dim PX As Double: PX = X0 + (X - XN) / m_Zoom
     Dim PY As Double: PY = Y0 - (Y - YN) / m_Zoom
-    Dim p As Point3D
-    If GetPointByCoords(PX, PY, p) Then
-        RaiseEvent PointSelected(p)
+    Dim p As Point3D, i As Long
+    If GetPointByCoords(PX, PY, p, i) Then
+        RaiseEvent PointSelected(p, i)
     End If
 End Sub
 
@@ -176,12 +176,13 @@ Private Sub mCanvas_MouseUp(Button As Integer, Shift As Integer, X As Single, Y 
     '
 End Sub
 
-Function GetPointByCoords(X As Double, Y As Double, p_out As Point3D) As Boolean
+Function GetPointByCoords(X As Double, Y As Double, p_out As Point3D, i_out As Long) As Boolean
     Dim i As Long, p As Point3D
     For i = 0 To m_Points.Count - 1
         Set p = m_Points.Item(i)
         If p.DistanceTo(X, Y) < 0.2 Then
             Set p_out = p
+            i_out = i
             GetPointByCoords = True
             Exit Function
         End If

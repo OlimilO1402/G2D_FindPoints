@@ -2,8 +2,8 @@ VERSION 5.00
 Begin VB.Form FMain 
    Caption         =   "FindPoints"
    ClientHeight    =   10455
-   ClientLeft      =   120
-   ClientTop       =   465
+   ClientLeft      =   225
+   ClientTop       =   870
    ClientWidth     =   19815
    BeginProperty Font 
       Name            =   "Segoe UI"
@@ -107,6 +107,13 @@ Begin VB.Form FMain
       Top             =   120
       Width           =   480
    End
+   Begin VB.Menu mnuPopUpPointList 
+      Caption         =   "mnuPopUpPointList"
+      Begin VB.Menu mnuPointsDeletePoint 
+         Caption         =   "Delete"
+         Shortcut        =   {DEL}
+      End
+   End
 End
 Attribute VB_Name = "FMain"
 Attribute VB_GlobalNameSpace = False
@@ -122,6 +129,7 @@ Private WithEvents mGraphicView As GraphicView
 Attribute mGraphicView.VB_VarHelpID = -1
 
 Private Sub Form_Load()
+    mnuPopUpPointList.Visible = False
     Set m_Points = MNew.List(vbObject, , True)
     Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
 End Sub
@@ -227,13 +235,43 @@ Private Sub List1_DblClick()
     UpdateGraphicView
 End Sub
 
+Private Sub List1_KeyUp(KeyCode As Integer, Shift As Integer)
+    If KeyCode = vbKeyDelete Then
+        DeletePoint List1.ListIndex
+    End If
+End Sub
+
+Private Sub List1_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If Button = MouseButtonConstants.vbRightButton Then
+        PopupMenu mnuPopUpPointList
+    End If
+End Sub
+
+Private Sub mnuPointsDeletePoint_Click()
+    DeletePoint List1.ListIndex
+End Sub
+
+Private Function DeletePoint(ByVal Index As Long)
+    Dim p As Point3D: Set p = m_Points.Item(Index)
+    Dim mr As VbMsgBoxResult: mr = MsgBox("Are you sure you want to delete this point? " & vbCrLf & p.ToStr)
+    If mr = vbCancel Then
+        Exit Function
+    End If
+    DeletePoint = True
+    m_Points.Remove Index
+    UpdateView
+End Function
+
 Private Sub mGraphicView_MousePointInWorldCoords(ByVal PX As Double, ByVal PY As Double)
     LblMouseInWorldCoords.Caption = "X: " & Format(PX, "0.00") & "; Y: " & Format(PY, "0.00")
 End Sub
 
-Private Sub mGraphicView_PointSelected(p As Point3D)
+Private Sub mGraphicView_PointSelected(p As Point3D, ByVal Index As Long)
     'MsgBox aPoint.X & " " & aPoint.Y
+    List1.ListIndex = Index
     FPoint3D.Move Me.Left + (Me.Width - FPoint3D.Width) / 2, Me.Top + (Me.Height - FPoint3D.Height) / 2
     If FPoint3D.ShowDialog(p, Me) = vbCancel Then Exit Sub
     UpdateView
 End Sub
+
+
