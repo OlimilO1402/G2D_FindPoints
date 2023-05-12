@@ -39,8 +39,8 @@ End Function
 
 Public Function Compare(other As Point3D) As Long
 Try: On Error GoTo Catch
-    Dim i0 As Long: i0 = CLng(m_Tag)
-    Dim i1 As Long: i1 = CLng(other.Tag)
+    Dim i0 As Long: i0 = Me.TagToLong 'CLng(m_Tag)
+    Dim i1 As Long: i1 = other.TagToLong 'CLng(other.Tag)
     If i0 > i1 Then
         Compare = 1
     ElseIf i0 < i1 Then
@@ -74,12 +74,37 @@ Public Property Let Z(ByVal Value As Double)
     m_Z = Value
 End Property
 
+Public Sub InvertX()
+    m_X = -m_X
+End Sub
+
+Public Sub InvertY()
+    m_Y = -m_Y
+End Sub
+
+Public Sub InvertZ()
+    m_Z = -m_Z
+End Sub
+
 Public Property Get Tag() As String
     Tag = m_Tag
 End Property
 Public Property Let Tag(ByVal Value As String)
     m_Tag = Value
 End Property
+
+Public Function TagToLong() As Long
+    Dim s As String: s = m_Tag
+    If Len(s) = 0 Then Exit Function
+    Dim i As Long, c As String, si As String
+    For i = 1 To Len(s)
+        c = Mid(s, i, 1)
+        Select Case AscW(c)
+        Case 48 To 57: si = si & c
+        End Select
+    Next
+    TagToLong = CLng(si)
+End Function
 
 Public Sub AddTag(ByVal aNewTag As String)
     m_Tag = m_Tag & " " & aNewTag

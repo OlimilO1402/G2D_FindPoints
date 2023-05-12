@@ -33,7 +33,7 @@ Private m_PointHighlighted As Point3D
 Private m_PointSelected    As Point3D
 
 Public Event MousePointInWorldCoords(ByVal PX As Double, ByVal PY As Double)
-Public Event PointSelected(p As Point3D, ByVal Index As Long)
+Public Event PointSelected(p As Point3D, ByVal Index As Long) 'for editing!
 
 Private Sub Class_Initialize()
     m_MarginL = 1: m_MarginT = 1: m_MarginR = 1: m_MarginB = 1
@@ -42,7 +42,7 @@ End Sub
 Friend Sub New_(aCanvas As PictureBox, aPoint3DList As List)
     Set mCanvas = aCanvas: Set m_Points = aPoint3DList
     mCanvas.ScaleMode = vbPixels
-    GetMinMaxExtents
+    CalcMinMaxExtents
 End Sub
 
 Public Property Get Canvas() As PictureBox
@@ -53,7 +53,7 @@ Public Property Get Points() As List
     Set Points = m_Points
 End Property
 
-Sub GetMinMaxExtents()
+Public Sub CalcMinMaxExtents()
     Dim X As Double, Y As Double, Z As Double
     Dim i As Long, p As Point3D
     For i = 0 To m_Points.Count - 1
@@ -113,7 +113,15 @@ Public Sub DrawPointsXY()
     Next
 End Sub
 
-Private Sub Point_DrawHightlighted(p As Point3D)
+Public Sub HighlightPoint(p As Point3D)
+    If Not m_PointHighlighted Is Nothing Then
+        Point_DeleteHighlighting m_PointHighlighted
+    End If
+    Set m_PointHighlighted = p
+    Point_DrawHighlighted p
+End Sub
+
+Private Sub Point_DrawHighlighted(p As Point3D)
     Dim X0 As Double: X0 = Me.CenterX
     Dim Y0 As Double: Y0 = Me.CenterY
     Dim XN As Single: XN = mCanvas.ScaleWidth / 2
@@ -122,7 +130,7 @@ Private Sub Point_DrawHightlighted(p As Point3D)
     Dim Y  As Single:  Y = YN - (p.Y - Y0) * m_Zoom
     mCanvas.Circle (X, Y), 3, vbRed
 End Sub
-Private Sub Point_DeleteHightlighting(p As Point3D)
+Private Sub Point_DeleteHighlighting(p As Point3D)
     Dim X0 As Double: X0 = Me.CenterX
     Dim Y0 As Double: Y0 = Me.CenterY
     Dim XN As Single: XN = mCanvas.ScaleWidth / 2
@@ -143,14 +151,14 @@ Private Sub mCanvas_MouseMove(Button As Integer, Shift As Integer, X As Single, 
     If GetPointByCoords(PX, PY, p, i) Then
         If Not m_PointHighlighted Is Nothing Then
             If Not m_PointHighlighted.IsSame(p) Then
-                Point_DeleteHightlighting m_PointHighlighted
+                Point_DeleteHighlighting m_PointHighlighted
             End If
         End If
         Set m_PointHighlighted = p
-        Point_DrawHightlighted p
+        Point_DrawHighlighted p
     Else
         If Not m_PointHighlighted Is Nothing Then
-            Point_DeleteHightlighting m_PointHighlighted
+            Point_DeleteHighlighting m_PointHighlighted
         End If
     End If
     RaiseEvent MousePointInWorldCoords(PX, PY)

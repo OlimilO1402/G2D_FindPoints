@@ -19,6 +19,22 @@ Begin VB.Form FMain
    ScaleHeight     =   10455
    ScaleWidth      =   19815
    StartUpPosition =   3  'Windows-Standard
+   Begin VB.CommandButton BtnMirrorXatYaxis 
+      Caption         =   "Mirror X@Y-axis <>"
+      Height          =   375
+      Left            =   7920
+      TabIndex        =   9
+      Top             =   0
+      Width           =   1695
+   End
+   Begin VB.CommandButton BtnMirrorYatXaxis 
+      Caption         =   "Mirror Y@X-axis^v"
+      Height          =   375
+      Left            =   6240
+      TabIndex        =   8
+      Top             =   0
+      Width           =   1695
+   End
    Begin VB.CommandButton BtnWriteToTBCB 
       Caption         =   "Write to TB&&CB"
       Height          =   375
@@ -35,8 +51,8 @@ Begin VB.Form FMain
       Top             =   0
       Width           =   1455
    End
-   Begin VB.CommandButton BtnClearPoints 
-      Caption         =   "Clear Points"
+   Begin VB.CommandButton BtnClear 
+      Caption         =   "Clear"
       Height          =   375
       Left            =   1560
       TabIndex        =   4
@@ -151,13 +167,16 @@ Private Sub BtnReadPoints_Click()
         TxtData.Text = Clipboard.GetText
     End If
     Dim s As String: s = MString.GetTabbedText(TxtData.Text)
+    'Debug.Print s
     ReadPoints s
     Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
     UpdateView
 End Sub
 
-Private Sub BtnClearPoints_Click()
+Private Sub BtnClear_Click()
     Set m_Points = MNew.List(vbObject, , True)
+    Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
+    'm_Points.Clear
     TxtData.Text = vbNullString
     UpdateView
 End Sub
@@ -179,6 +198,32 @@ Private Sub BtnWriteToTBCB_Click()
     Clipboard.SetText s
 End Sub
 
+Private Sub BtnMirrorYatXaxis_Click()
+    'Flip all points vertically, the points above will become the points below and vice versa
+    'Mirror ^v
+    Dim i As Long, p As Point3D
+    For i = 0 To m_Points.Count - 1
+        Set p = m_Points.Item(i)
+        p.InvertY
+    Next
+    'mGraphicView.CalcMinMaxExtents
+    Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
+    UpdateView
+End Sub
+
+Private Sub BtnMirrorXatYaxis_Click()
+    'Flip all points horizontally, the points left will become the points right and vice versa
+    'Mirror <>
+    Dim i As Long, p As Point3D
+    For i = 0 To m_Points.Count - 1
+        Set p = m_Points.Item(i)
+        p.InvertX
+    Next
+    'mGraphicView.CalcMinMaxExtents
+    Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
+    UpdateView
+End Sub
+
 Private Sub ReadPoints(s As String)
     Dim lines() As String: lines = Split(s, vbCrLf)
     Dim line As String, sa() As String
@@ -189,9 +234,21 @@ Private Sub ReadPoints(s As String)
         line = Trim(lines(i))
         If Len(line) Then
             sa = Split(line, vbTab)
+'            If sa(0) = "K45" Then
+'                Debug.Assert True
+'            End If
             u = UBound(sa)
             'if only tag but no point -> p(0,0)+addedtags -> edit tag of p(0,0) afterwards
             If j <= u Then Tag = sa(j)
+'                If Left(sa(j), 1) = "-" Then
+'                    Debug.Assert True
+'                ElseIf Left(sa(j + 1), 1) = "-" Then
+'                    Debug.Assert True
+'                ElseIf Left(sa(j + 2), 1) = "-" Then
+'                    Debug.Assert True
+'                ElseIf Left(sa(j + 2), 1) = "-" Then
+'                    Debug.Assert True
+'                End If
             'If j <> u Then
                 j = j + 1: If j <= u Then Double_TryParse sa(j), X
                 j = j + 1: If j <= u Then Double_TryParse sa(j), Y
@@ -224,6 +281,14 @@ Sub UpdateGraphicView()
     If Not mGraphicView Is Nothing Then mGraphicView.DrawPointsXY
 End Sub
 
+Private Sub List1_Click()
+    Dim i As Long: i = List1.ListIndex
+    If i < 0 Then Exit Sub
+    Dim p As Point3D: Set p = m_Points.Item(i)
+    If p Is Nothing Then Exit Sub
+    mGraphicView.HighlightPoint p
+End Sub
+
 Private Sub List1_DblClick()
     Dim i As Long: i = List1.ListIndex
     If i < 0 Then Exit Sub
@@ -244,6 +309,7 @@ End Sub
 Private Sub List1_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
     If Button = MouseButtonConstants.vbRightButton Then
         PopupMenu mnuPopUpPointList
+    'ElseIf Button = MouseButtonConstants.vbLeftButton Then
     End If
 End Sub
 
@@ -253,7 +319,7 @@ End Sub
 
 Private Function DeletePoint(ByVal Index As Long)
     Dim p As Point3D: Set p = m_Points.Item(Index)
-    Dim mr As VbMsgBoxResult: mr = MsgBox("Are you sure you want to delete this point? " & vbCrLf & p.ToStr)
+    Dim mr As VbMsgBoxResult: mr = MsgBox("Are you sure you want to delete this point? " & vbCrLf & p.ToStr, vbOKCancel)
     If mr = vbCancel Then
         Exit Function
     End If
@@ -274,4 +340,9 @@ Private Sub mGraphicView_PointSelected(p As Point3D, ByVal Index As Long)
     UpdateView
 End Sub
 
+Private Sub PBcanvas_KeyUp(KeyCode As Integer, Shift As Integer)
+    If KeyCode = vbKeyDelete Then
+        DeletePoint List1.ListIndex
+    End If
+End Sub
 
