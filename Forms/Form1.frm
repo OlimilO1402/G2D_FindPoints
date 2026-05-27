@@ -19,6 +19,14 @@ Begin VB.Form FMain
    ScaleHeight     =   10455
    ScaleWidth      =   19815
    StartUpPosition =   3  'Windows-Standard
+   Begin VB.CommandButton BtnCopyToClipBoard 
+      Caption         =   "Copy To ClipBoard"
+      Height          =   375
+      Left            =   9600
+      TabIndex        =   10
+      Top             =   0
+      Width           =   1695
+   End
    Begin VB.CommandButton BtnMirrorXatYaxis 
       Caption         =   "Mirror X@Y-axis <>"
       Height          =   375
@@ -144,29 +152,49 @@ Private m_Points As List
 Private WithEvents mGraphicView As GraphicView
 Attribute mGraphicView.VB_VarHelpID = -1
 
+'Copy Paste from Excel like e.g.:
+'1   1,234567    1,234567    0
+'2   1,234567    10  0
+'3   10  10  0
+'4   10  5   0
+'5   12  5   0
+'6   12  1,234567    0
+
+
 Private Sub Form_Load()
     mnuPopUpPointList.Visible = False
     Set m_Points = MNew.List(vbObject, , True)
     Me.Caption = Me.Caption & " v" & App.Major & "." & App.Minor & "." & App.Revision
 End Sub
 
+Private Sub BtnCopyToClipBoard_Click()
+    Dim s As String
+    s = s & "1" & vbTab & "1,1234567" & vbTab & "1,234567" & vbTab & 0 & vbCrLf
+    s = s & "2" & vbTab & "1,1234567" & vbTab & "10" & vbTab & 0 & vbCrLf
+    s = s & "3" & vbTab & "10" & vbTab & "10" & vbTab & 0 & vbCrLf
+    s = s & "4" & vbTab & "10" & vbTab & "5" & vbTab & 0 & vbCrLf
+    s = s & "5" & vbTab & "12" & vbTab & "5" & vbTab & 0 & vbCrLf
+    s = s & "6" & vbTab & "12" & vbTab & "1,234567" & vbTab & 0 & vbCrLf
+    Clipboard.SetText s
+End Sub
+
 Private Sub Form_Resize()
-    Dim L As Single, T As Single, W As Single, H As Single
-    L = TxtData.Left: T = TxtData.Top: W = TxtData.Width: H = Me.ScaleHeight - T
-    If W > 0 And H > 0 Then TxtData.Move L, T, W, H
-    L = List1.Left: T = List1.Top: W = List1.Width: H = Me.ScaleHeight - T
-    If W > 0 And H > 0 Then List1.Move L, T, W, H
-    L = PBcanvas.Left: T = PBcanvas.Top: W = Me.ScaleWidth - L: H = Me.ScaleHeight - T
-    If W > 0 And H > 0 Then PBcanvas.Move L, T, W, H
+    Dim L As Single, t As Single, W As Single, H As Single
+    L = TxtData.Left: t = TxtData.Top: W = TxtData.Width: H = Me.ScaleHeight - t
+    If W > 0 And H > 0 Then TxtData.Move L, t, W, H
+    L = List1.Left: t = List1.Top: W = List1.Width: H = Me.ScaleHeight - t
+    If W > 0 And H > 0 Then List1.Move L, t, W, H
+    L = PBcanvas.Left: t = PBcanvas.Top: W = Me.ScaleWidth - L: H = Me.ScaleHeight - t
+    If W > 0 And H > 0 Then PBcanvas.Move L, t, W, H
     PBcanvas.Cls
     UpdateGraphicView
 End Sub
 
 Private Sub BtnReadPoints_Click()
-    If TxtData.Text = vbNullString Then
-        TxtData.Text = Clipboard.GetText
+    If TxtData.text = vbNullString Then
+        TxtData.text = Clipboard.GetText
     End If
-    Dim s As String: s = MString.GetTabbedText(TxtData.Text)
+    Dim s As String: s = MString.GetTabbedText(TxtData.text)
     'Debug.Print s
     ReadPoints s
     Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
@@ -177,7 +205,7 @@ Private Sub BtnClear_Click()
     Set m_Points = MNew.List(vbObject, , True)
     Set mGraphicView = MNew.GraphicView(PBcanvas, m_Points)
     'm_Points.Clear
-    TxtData.Text = vbNullString
+    TxtData.text = vbNullString
     UpdateView
 End Sub
 
@@ -193,7 +221,7 @@ Private Sub BtnWriteToTBCB_Click()
         Set p = m_Points.Item(i)
         s = s & p.ToTBCB & vbCrLf
     Next
-    TxtData.Text = s
+    TxtData.text = s
     Clipboard.Clear
     Clipboard.SetText s
 End Sub
@@ -228,7 +256,7 @@ Private Sub ReadPoints(s As String)
     Dim lines() As String: lines = Split(s, vbCrLf)
     Dim line As String, sa() As String
     Dim i As Long, j As Long, u As Long
-    Dim X As Double, Y As Double, Z As Double, Tag As String
+    Dim x As Double, y As Double, z As Double, Tag As String
     Dim p As Point3D, p0 As Point3D
     For i = 0 To UBound(lines)
         line = Trim(lines(i))
@@ -250,17 +278,17 @@ Private Sub ReadPoints(s As String)
 '                    Debug.Assert True
 '                End If
             'If j <> u Then
-                j = j + 1: If j <= u Then Double_TryParse sa(j), X
-                j = j + 1: If j <= u Then Double_TryParse sa(j), Y
-                j = j + 1: If j <= u Then Double_TryParse sa(j), Z
-                Set p = MNew.Point3D(X, Y, Z, Tag)
+                j = j + 1: If j <= u Then Double_TryParse sa(j), x
+                j = j + 1: If j <= u Then Double_TryParse sa(j), y
+                j = j + 1: If j <= u Then Double_TryParse sa(j), z
+                Set p = MNew.Point3D(Tag, x, y, z)
                 If m_Points.ContainsKey(p.Key) Then
                     Set p0 = m_Points.ItemByKey(p.Key)
                     p0.AddTag p.Tag
                 Else
                     m_Points.Add p
                 End If
-                X = 0: Y = 0: Z = 0
+                x = 0: y = 0: z = 0
             'End If
             j = 0
         End If
@@ -295,7 +323,8 @@ Private Sub List1_DblClick()
     Dim p As Point3D: Set p = m_Points.Item(i)
     If p Is Nothing Then Exit Sub
     FPoint3D.Move Me.Left + (Me.Width - FPoint3D.Width) / 2, Me.Top + (Me.Height - FPoint3D.Height) / 2
-    If FPoint3D.ShowDialog(p, Me) = vbCancel Then Exit Sub
+    'If FPoint3D.ShowDialog(p, Me) = vbCancel Then Exit Sub
+    If MNew.ModalDialog(FPoint3D, FPoint3D.BtnOK, FPoint3D.BtnCancel).ShowDialog(p, Me) = vbCancel Then Exit Sub
     List1.List(i) = p.ToStr
     UpdateGraphicView
 End Sub
@@ -306,7 +335,7 @@ Private Sub List1_KeyUp(KeyCode As Integer, Shift As Integer)
     End If
 End Sub
 
-Private Sub List1_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub List1_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = MouseButtonConstants.vbRightButton Then
         PopupMenu mnuPopUpPointList
     'ElseIf Button = MouseButtonConstants.vbLeftButton Then
@@ -332,11 +361,22 @@ Private Sub mGraphicView_MousePointInWorldCoords(ByVal PX As Double, ByVal PY As
     LblMouseInWorldCoords.Caption = "X: " & Format(PX, "0.00") & "; Y: " & Format(PY, "0.00")
 End Sub
 
+
+'Example for using this class in a ButtonClick on a Form:
+'Private Sub BtnCityAdd_Click()
+'    Dim City As City: Set City = MNew.City("Musterstadt", "00000")
+'    If MNew.ModalDialog(FCity, FCity.BtnOK, FCity.BtnCancel).ShowDialog(City, Me) = vbCancel Then Exit Sub
+'    MData.Cities_AddLB LstCities, City
+'End Sub
+
+
 Private Sub mGraphicView_PointSelected(p As Point3D, ByVal Index As Long)
     'MsgBox aPoint.X & " " & aPoint.Y
     List1.ListIndex = Index
     FPoint3D.Move Me.Left + (Me.Width - FPoint3D.Width) / 2, Me.Top + (Me.Height - FPoint3D.Height) / 2
-    If FPoint3D.ShowDialog(p, Me) = vbCancel Then Exit Sub
+    
+    'If FPoint3D.ShowDialog(p, Me) = vbCancel Then Exit Sub
+    If MNew.ModalDialog(FPoint3D, FPoint3D.BtnOK, FPoint3D.BtnCancel).ShowDialog(p, Me) = vbCancel Then Exit Sub
     UpdateView
 End Sub
 

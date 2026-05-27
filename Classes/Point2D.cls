@@ -12,21 +12,28 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
+Private m_Tag As String 'Tag, Bezeichnung, Name ...
 Private m_X   As Double
 Private m_Y   As Double
 Private m_Z   As Double
-Private m_Tag As String
 
-Friend Sub New_(ByVal aX As Double, ByVal aY As Double, ByVal aZ As Double, ByVal aTag As String)
-    m_X = aX: m_Y = aY: m_Z = aZ: m_Tag = aTag
+Friend Sub New_(TagName As String, x As Double, y As Double, z As Double)
+    m_Tag = TagName: m_X = x: m_Y = y: m_Z = z
 End Sub
 
-Friend Sub NewC(other As Point3D)
-    m_X = other.X: m_Y = other.Y: m_Z = other.Z: m_Tag = other.Tag
+Public Sub NewC(other As Point3D)
+    m_X = other.x: m_Y = other.y: m_Z = other.z: m_Tag = other.Tag
 End Sub
 
-Friend Function Clone() As Point3D
+Public Function Clone() As Point3D
     Set Clone = New Point3D: Clone.NewC Me
+End Function
+
+Public Function SetParams(Optional TagName, Optional CoordX, Optional CoordY, Optional CoordZ)
+    If Not IsMissing(TagName) Then m_Tag = CStr(TagName)
+    If Not IsMissing(CoordX) Then m_X = CDbl(CoordX)
+    If Not IsMissing(CoordY) Then m_Y = CDbl(CoordY)
+    If Not IsMissing(CoordZ) Then m_Z = CDbl(CoordZ)
 End Function
 
 Public Property Get Key() As String
@@ -48,31 +55,30 @@ Try: On Error GoTo Catch
     End If
 Catch:
 End Function
-    
 Public Function ToTBCB() As String
     ToTBCB = m_Tag & vbTab & Format(m_X, "0.0##") & vbTab & Format(m_Y, "0.0##") & vbTab & Format(m_Z, "0.0##")
 End Function
 
-Public Property Get X() As Double
-    X = m_X
+Public Property Get x() As Double
+    x = m_X
 End Property
-Public Property Let X(ByVal Value As Double)
-    m_X = Value
-End Property
+'Public Property Let X(ByVal Value As Double)
+'    m_X = Value
+'End Property
 
-Public Property Get Y() As Double
-    Y = m_Y
+Public Property Get y() As Double
+    y = m_Y
 End Property
-Public Property Let Y(ByVal Value As Double)
-    m_Y = Value
-End Property
+'Public Property Let Y(ByVal Value As Double)
+'    m_Y = Value
+'End Property
 
-Public Property Get Z() As Double
-    Z = m_Z
+Public Property Get z() As Double
+    z = m_Z
 End Property
-Public Property Let Z(ByVal Value As Double)
-    m_Z = Value
-End Property
+'Public Property Let Z(ByVal Value As Double)
+'    m_Z = Value
+'End Property
 
 Public Sub InvertX()
     m_X = -m_X
@@ -89,9 +95,9 @@ End Sub
 Public Property Get Tag() As String
     Tag = m_Tag
 End Property
-Public Property Let Tag(ByVal Value As String)
-    m_Tag = Value
-End Property
+'Public Property Let Tag(ByVal Value As String)
+'    m_Tag = Value
+'End Property
 
 Public Function TagToLong() As Long
     Dim s As String: s = m_Tag
@@ -110,9 +116,9 @@ Public Sub AddTag(ByVal aNewTag As String)
     m_Tag = m_Tag & " " & aNewTag
 End Sub
 
-Public Function DistanceTo(X As Double, Y As Double) As Double
-    Dim dX As Double: dX = m_X - X
-    Dim dY As Double: dY = m_Y - Y
+Public Function DistanceTo(x As Double, y As Double) As Double
+    Dim dX As Double: dX = m_X - x
+    Dim dY As Double: dY = m_Y - y
     DistanceTo = VBA.Math.Sqr(dX * dX + dY * dY)
 End Function
 
@@ -121,7 +127,7 @@ Public Function IsSame(other As Point3D) As Boolean
 End Function
 
 Public Function Equals(other As Point3D) As Boolean
-    Equals = m_X = other.X: If Not Equals Then Exit Function
-    Equals = m_Y = other.Y: If Not Equals Then Exit Function
-    Equals = m_Z = other.Z
+    Equals = m_X = other.x: If Not Equals Then Exit Function
+    Equals = m_Y = other.y: If Not Equals Then Exit Function
+    Equals = m_Z = other.z
 End Function

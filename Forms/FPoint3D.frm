@@ -52,10 +52,10 @@ Begin VB.Form FPoint3D
          Strikethrough   =   0   'False
       EndProperty
       Height          =   375
-      Left            =   720
+      Left            =   600
       TabIndex        =   7
       Top             =   2040
-      Width           =   2415
+      Width           =   2655
    End
    Begin VB.TextBox TxtY 
       Alignment       =   1  'Rechts
@@ -69,10 +69,10 @@ Begin VB.Form FPoint3D
          Strikethrough   =   0   'False
       EndProperty
       Height          =   375
-      Left            =   720
+      Left            =   600
       TabIndex        =   5
       Top             =   1560
-      Width           =   2415
+      Width           =   2655
    End
    Begin VB.TextBox TxtX 
       Alignment       =   1  'Rechts
@@ -86,10 +86,10 @@ Begin VB.Form FPoint3D
          Strikethrough   =   0   'False
       EndProperty
       Height          =   375
-      Left            =   720
+      Left            =   600
       TabIndex        =   3
       Top             =   1080
-      Width           =   2415
+      Width           =   2655
    End
    Begin VB.CommandButton BtnCancel 
       Cancel          =   -1  'True
@@ -188,24 +188,50 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Private m_Point As Point3D
-Private m_Result As VbMsgBoxResult
+Private m_Point  As Point3D
+'Private m_Result As VbMsgBoxResult
+'in the Form we need:
+'Private m_Obj As <AnyClass e.g. City>
+'
+'Public Sub UpdateView(Obj)
+'    Set m_Obj = Obj
+'    With m_Obj
+'        TxtName.Text = .Name
+'        TxtPostalCode.Text = .PostalCode
+'    End With
+'End Sub
+'
+'Public Function UpdateData(Obj) As Boolean
+'    m_City.NewC MNew.City(TxtName.Text, TxtPostalCode.Text)
+'    UpdateData = True
+'End Function
 
-Public Function ShowDialog(aPoint3D As Point3D, FOwner As Form) As VbMsgBoxResult
-    Set m_Point = aPoint3D.Clone
-    UpdateView
-    SelectTag
-    Me.Show vbModal, FOwner
-    aPoint3D.NewC m_Point
-    ShowDialog = m_Result
+Public Sub UpdateView(Obj)
+    Set m_Point = Obj
+    'every coord shows ponly the first 3 digits
+    'if the tb gest the focus, all digits are shown
+    With m_Point
+        TxtTag.text = .Tag
+        TxtX.text = Format(.x, "0.000")
+        TxtY.text = Format(.y, "0.000")
+        TxtZ.text = Format(.z, "0.000")
+    End With
+End Sub
+
+Public Function UpdateData(Obj) As Boolean
+'???
+    UpdateData = True
 End Function
 
-Public Sub UpdateView()
-    TxtX.Text = Format(m_Point.X, "0.000")
-    TxtY.Text = Format(m_Point.Y, "0.000")
-    TxtZ.Text = Format(m_Point.Z, "0.000")
-    TxtTag.Text = m_Point.Tag
-End Sub
+'Public Function ShowDialog(aPoint3D As Point3D, FOwner As Form) As VbMsgBoxResult
+'    Set m_Point = aPoint3D.Clone
+'    UpdateView
+'    SelectTag
+'    Me.Show vbModal, FOwner
+'    ShowDialog = m_Result
+'    If ShowDialog = vbCancel Then Exit Function
+'    'aPoint3D.NewC m_Point
+'End Function
 
 Sub SelectTag()
     'TxtTag.SelText = TxtTag.Text
@@ -213,71 +239,86 @@ Sub SelectTag()
     'TxtTag.SelLength = Len(TxtTag.Text)
     'TxtTag.SetFocus
     TxtTag.SelStart = 0
-    TxtTag.SelLength = Len(TxtTag.Text)
+    TxtTag.SelLength = Len(TxtTag.text)
     'MsgBox "OK selected"
 End Sub
 
-Private Sub BtnOK_Click()
-    m_Result = vbOK
-    GetallValues
-    Unload Me
-End Sub
 
-Sub GetallValues()
-    GetX
-    GetY
-    GetZ
-    TxtTag_LostFocus
-End Sub
+'Private Sub BtnOK_Click()
+'    m_R 'esult = vbOK
+'    'GetallValues
+'    Unload Me
+'End Sub
 
-Private Sub BtnCancel_Click()
-    m_Result = vbCancel
-    Unload Me
-End Sub
+'Sub GetallValues()
+'    'GetX
+'    'GetY
+'    'GetZ
+'    TxtTag_LostFocus
+'End Sub
 
+'Private Sub BtnCancel_Click()
+'    m_Result = vbCancel
+'    Unload Me
+'End Sub
+
+Private Sub TxtX_GotFocus()
+    Dim st As String: st = TxtX.text
+    Dim sp As String: sp = m_Point.x
+    If Len(st) < Len(sp) Then TxtX.text = m_Point.x
+End Sub
 Private Sub TxtX_LostFocus()
     GetX
-    UpdateView
+    UpdateView m_Point
 End Sub
 
+Private Sub TxtY_GotFocus()
+    Dim st As String: st = TxtY.text
+    Dim sp As String: sp = m_Point.y
+    If Len(st) < Len(sp) Then TxtY.text = m_Point.y
+End Sub
 Private Sub TxtY_LostFocus()
     GetY
-    UpdateView
+    UpdateView m_Point
 End Sub
 
+Private Sub TxtZ_GotFocus()
+    Dim st As String: st = TxtZ.text
+    Dim sp As String: sp = m_Point.z
+    If Len(st) < Len(sp) Then TxtZ.text = m_Point.z
+End Sub
 Private Sub TxtZ_LostFocus()
     GetZ
-    UpdateView
+    UpdateView m_Point
 End Sub
 
 Sub GetX()
-    Dim Value As Double, s As String: s = TxtX.Text
+    Dim Value As Double, s As String: s = TxtX.text
     If Not MString.Double_TryParse(s, Value) Then
         MsgBox "Could not convert to Double :" & s
         Exit Sub
     End If
-    m_Point.X = Value
+    m_Point.SetParams CoordX:=Value
 End Sub
 
 Sub GetY()
-    Dim Value As Double, s As String: s = TxtY.Text
+    Dim Value As Double, s As String: s = TxtY.text
     If Not MString.Double_TryParse(s, Value) Then
         MsgBox "Could not convert to Double :" & s
         Exit Sub
     End If
-    m_Point.Y = Value
+    m_Point.SetParams CoordY:=Value
 End Sub
 
 Sub GetZ()
-    Dim Value As Double, s As String: s = TxtZ.Text
+    Dim Value As Double, s As String: s = TxtZ.text
     If Not MString.Double_TryParse(s, Value) Then
         MsgBox "Could not convert to Double :" & s
         Exit Sub
     End If
-    m_Point.Z = Value
+    m_Point.SetParams CoordZ:=Value
 End Sub
 
 Private Sub TxtTag_LostFocus()
-    m_Point.Tag = TxtTag.Text
+    m_Point.SetParams TagName:=TxtTag.text
 End Sub
-
