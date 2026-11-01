@@ -20,9 +20,9 @@ Begin VB.Form FMain
    ScaleWidth      =   19815
    StartUpPosition =   3  'Windows-Standard
    Begin VB.CommandButton BtnCopyToClipBoard 
-      Caption         =   "Copy To ClipBoard"
+      Caption         =   "Bsp->ClipBoard"
       Height          =   375
-      Left            =   9600
+      Left            =   9720
       TabIndex        =   10
       Top             =   0
       Width           =   1695
